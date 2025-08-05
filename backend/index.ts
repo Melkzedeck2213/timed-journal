@@ -20,37 +20,41 @@ interface Note {
   text: string;
   created_at: string; // ISO date string
 }
-
-// Get all notes
-app.get("/notes", async (_req: Request, res: Response) => {
-  try {
-    const result = await pool.query<Note>("SELECT * FROM notes ORDER BY created_at DESC");
-    res.json(result.rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Server error");
+//get all notes
+app.get("/notes", async(_req:Request, res:Response) => {
+  try{
+    const result = await pool.query<Note>("SELECT * FRFOM notes ORDER BY created_at DESC")
+    res.json(result.rows)
   }
-});
+  catch (error) {
+    console.error("Error fetching notes:", error);
+    res.status(500).json({error: "Internal server error"});
 
-
-
-// Add a note
-app.post("/notes", async (req: Request, res: Response) => {
-  const { text } = req.body;
-  if (!text) return res.status(400).json({ error: "Note text is required" });
-  try {
-    const result = await pool.query<Note>(
-      "INSERT INTO notes (text, created_at) VALUES ($1, NOW()) RETURNING *",
-      [text]
-    );
-    res.status(201).json(result.rows[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Server error");
   }
+})
+
+
+//create a new note
+app.post("/notes", async(req:Request, res:Response) =>{
+const {text} = req.body
+if(!text || typeof text !== "string"){
+  return res.status(400).json({error: "Invalid note text"})
+}
+try {
+  const result = await pool.query<Note>("INSERT INTO notes (text, created_at) VALUES ($1, NOW()) RETURNING *", [text]);
+  res.status(201).json(result.rows[0]);
+
+}
+catch (error) {
+    console.error(error);
+    res.status(500).send("Server error");
+}
+})
+
+const PORT = 4000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
-
-
 
 
 
